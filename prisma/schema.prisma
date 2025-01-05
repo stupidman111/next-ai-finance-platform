@@ -1,14 +1,103 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
+//生成器
 generator client {
   provider = "prisma-client-js"
 }
 
+//数据源
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model User {
+  id           String        @id @default(uuid()) //主键
+  clerkUserId  String        @unique //唯一字段，不重复
+  email        String        @unique //唯一字段，不重复
+  name         String? //可选
+  imageUrl     String? //可选
+  transactions Transaction[] //该用户的交易
+  accounts     Account[] //该用户的账户
+  budgets      Budget[] //该用户的预算
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  @@map("users")
+}
+
+model Account {
+  id           String        @id @default(uuid())
+  name         String
+  type         AccountType //账户类型
+  balance      Decimal       @default(0) //账户余额，默认为 0
+  isDefault    Boolean       @default(false) //是否为默认账户
+  userId       String
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade) //与User的关联，设置了外键约束，用户删除时级联删除相关账户。
+  transactions Transaction[] //该账户的交易
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  @@index([userId]) //为 userId 创建索引，提高查询性能
+  @@map("accounts")
+}
+
+model Transaction {
+  id                String             @id @default(uuid())
+  type              TransactionType //交易类型
+  amount            Decimal //交易金额
+  description       String? //描述
+  date              DateTime //交易日期
+  category          String //交易类别
+  receiptUrl        String? //
+  isRecurring       Boolean            @default(false) //指示交易是否为重复性交易，默认为 false
+  recurringInterval RecurringInterval? //重复交易的间隔，仅在 isRecurring 为 true 时使用
+  nextRecurringDate DateTime? //下次重复交易日期
+  lastProcessed     DateTime? //重复交易的上次处理日期
+  status            TransactionStatus  @default(COMPLETED) //交易状态，默认为 COMPLETED，可选：待处理、失败、已完成
+  userId            String
+  user              User               @relation(fields: [userId], references: [id], onDelete: Cascade) // 与User的关联，设置了外键约束，用户删除时级联删除相关交易
+  accountId         String
+  account           Account            @relation(fields: [accountId], references: [id], onDelete: Cascade) //与 Account 的关联，设置了外键约束，用户删除时级联删除相关交易
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+
+  @@index([userId]) //索引
+  @@index([accountId]) //索引
+  @@map("transactions")
+}
+
+model Budget {
+  id            String    @id @default(uuid())
+  amount        Decimal //预算金额
+  lastAlertSent DateTime? //可选，记录上次发生警报的时间
+  userId        String    @unique
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade) //与 User 的关联，设置了外键约束，用户删除时级联删除相关预算
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([userId]) //索引
+  @@map("budgets")
+}
+
+enum TransactionType {
+  INCOME
+  EXPENSE
+}
+
+enum RecurringInterval {
+  DAILY
+  WEEKLY
+  MONTHLY
+  YEARLY
+}
+
+enum TransactionStatus {
+  PENDING
+  COMPLETED
+  FAILED
+}
+
+enum AccountType {
+  CURRENT
+  SAVINGS
 }
