@@ -1,7 +1,7 @@
 "use client";
 
 import { createAccount } from "@/actions/dashboard";
-import { accountSchema } from "@/app/lib/schema";
+import { accountSchema, FormType } from "@/app/lib/schema";
 import useFetch from "@/hooks/use-fetch";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2 } from "lucide-react";
@@ -52,7 +52,7 @@ const CreateAccountDrawer = ({ children }) => {
     error,
     fn: createAccountFn,
     loading: createAccountLoading,
-  } = useFetch(createAccount);
+  } = useFetch(createAccount); //传入 createAccount-创建用户账户 获取一系列工具
 
   useEffect(() => {
     if (newAccount && !createAccountLoading) {
@@ -68,9 +68,9 @@ const CreateAccountDrawer = ({ children }) => {
     }
   }, [error]);
 
-  const onSumbit = async (data) => {
+  async function onSumbit(data: FormType) {
     await createAccountFn(data);
-  };
+  }
 
   return (
     <Drawer open={open} onOpenChange={setOpen}>

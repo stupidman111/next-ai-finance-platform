@@ -6,3 +6,5 @@ export const accountSchema = z.object({
   balance: z.string().min(1, "Initial balance is required"),
   isDefault: z.boolean().default(false),
 });
+
+export type FormType = z.infer<typeof accountSchema>;
