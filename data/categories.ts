@@ -1,4 +1,15 @@
-export const defaultCategories = [
+// 定义类别类型
+interface Category {
+  id: string;
+  name: string;
+  type: "INCOME" | "EXPENSE";
+  color: string;
+  icon: string;
+  subcategories?: string[]; // 可选字段
+}
+
+// 定义默认类别数据
+export const defaultCategories: Category[] = [
   // Income Categories
   {
     id: "salary",
@@ -161,7 +172,11 @@ export const defaultCategories = [
   },
 ];
 
-export const categoryColors = defaultCategories.reduce((acc, category) => {
-  acc[category.id] = category.color;
-  return acc;
-}, {});
+// 创建一个 categoryColors 对象，将每个类别的 id 映射到 color
+export const categoryColors: Record<string, string> = defaultCategories.reduce(
+  (acc, category) => {
+    acc[category.id] = category.color;
+    return acc;
+  },
+  {} as Record<string, string> // 确保类型安全
+);
